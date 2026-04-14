@@ -63,10 +63,13 @@ const RegisterPage = () => {
 
       login(response.token, response.user);
       navigate("/meal-planner");
+   // ...existing code...
     } catch (error) {
       const serverMessage =
         error?.response?.data?.message ||
+        error?.response?.data?.msg ||
         error?.response?.data?.error ||
+        error?.response?.data?.errors?.[0]?.msg ||
         (error?.code === "ERR_NETWORK"
           ? "Cannot reach backend API. Please try again later."
           : "Registration failed. Please try again.");
@@ -76,7 +79,9 @@ const RegisterPage = () => {
       }
 
       setMessage(serverMessage);
+      console.error("Register error:", error?.response?.status, error?.response?.data || error);
     } finally {
+// ...existing code...
       setLoading(false);
     }
   };
