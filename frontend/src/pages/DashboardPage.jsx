@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Bar,
@@ -12,12 +12,19 @@ import {
 import { fetchDashboard } from "../services/dietService";
 import NutrientDonut from "../components/charts/NutrientDonut";
 import SkeletonCard from "../components/ui/SkeletonCard";
+import { HydrationStepperCard, UserGreetingCard } from "../components/dashboard/ClassWidgets";
+import { useWellness } from "../context/WellnessContext";
 
 const DashboardPage = () => {
+  // useState keeps API data and local UI states for dashboard rendering.
   const [dashboard, setDashboard] = useState(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const navigate = useNavigate();
+  // useRef gives imperative focus control for quick note input.
+  const quickNoteRef = useRef(null);
+  // useContext reads reducer-driven shared wellness state.
+  const { state: wellnessState, dispatch } = useWellness();
 
   const loadDashboard = async () => {
     try {
@@ -31,6 +38,7 @@ const DashboardPage = () => {
     }
   };
 
+  // useEffect loads dashboard data once on page mount.
   useEffect(() => {
     loadDashboard();
   }, []);
@@ -63,6 +71,8 @@ const DashboardPage = () => {
   ];
 
   const today = new Date().toLocaleDateString([], { weekday: "long", month: "short", day: "numeric" });
+  const hydrationTargetMl = Number(user?.waterGoal || 2500);
+  const hydrationProgress = Math.min(100, Math.round((wellnessState.waterMl / hydrationTargetMl) * 100));
 
   const checklist = [
     {
@@ -147,11 +157,14 @@ const DashboardPage = () => {
       <div className="card page-header">
         <p className="text-xs uppercase tracking-[0.16em] text-[#7B7468]">Smart Dashboard</p>
         <h2 className="mt-1 text-3xl font-semibold tracking-tight text-[#2F2F2B]">Your wellness snapshot</h2>
-        <p className="mt-1 text-sm text-[#6B665E]">Welcome back, {user?.name || "friend"}. Stay consistent today.</p>
-        <div className="greeting-strip mt-4">
-          <p>{today}</p>
+        <p className="mt-1 text-sm text-[#6B665E]">Stay consistent today with meals, hydration, and tracking.</p>
+        <UserGreetingCard name={user?.name || "friend"} goal={latestPlan?.healthGoal || user?.goal || ""} dateText={today} />
+        <div className="mt-3 flex flex-wrap items-center gap-2">
           <button type="button" className="btn-secondary !py-1.5 text-sm" onClick={() => navigate("/meal-planner")}>
             Generate Today&apos;s Plan
+          </button>
+          <button type="button" className="btn-secondary !py-1.5 text-sm" onClick={() => quickNoteRef.current?.focus()}>
+            Focus Quick Note
           </button>
         </div>
       </div>
@@ -172,6 +185,38 @@ const DashboardPage = () => {
         <div className="card hover-card">
           <h3 className="text-sm text-[#7B7468]">BMR / TDEE</h3>
           <p className="text-xl font-bold tracking-tight text-[#2F2F2B]">{latestPlan?.bmr || "-"} / {latestPlan?.tdee || "-"}</p>
+        </div>
+        <div className="card hover-card">
+          <h3 className="text-sm text-[#7B7468]">Hydration Progress</h3>
+          <p className="text-2xl font-bold tracking-tight text-[#2F2F2B]">{wellnessState.waterMl} ml</p>
+          <p className="text-xs text-[#6B665E]">{hydrationProgress}% of {hydrationTargetMl} ml target</p>
+        </div>
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-2">
+        <HydrationStepperCard
+          onAdd={(amount) => dispatch({ type: "hydrate", payload: amount })}
+          onReset={() => dispatch({ type: "resetHydration" })}
+        />
+        <div className="card space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-[#2F2F2B]">Quick Note (Reducer + Context + Ref)</h3>
+            <button
+              type="button"
+              className="btn-secondary !py-1.5 text-xs"
+              onClick={() => dispatch({ type: "setNote", payload: "" })}
+            >
+              Clear
+            </button>
+          </div>
+          <textarea
+            ref={quickNoteRef}
+            className="input min-h-[96px]"
+            placeholder="Add a short note for today (meal timing, workout reminder, etc.)"
+            value={wellnessState.quickNote}
+            onChange={(event) => dispatch({ type: "setNote", payload: event.target.value })}
+          />
+          <p className="text-xs text-[#6B665E]">Saved locally and available across pages in this app session.</p>
         </div>
       </div>
 

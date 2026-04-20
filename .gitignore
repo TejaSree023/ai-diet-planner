@@ -1,0 +1,10 @@
+# Root-level local/IDE artifacts
+Android/
+.idea/
+
+# Optional local workspace exports
+workspace/
+
+# OS cruft
+.DS_Store
+Thumbs.db

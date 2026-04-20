@@ -31,9 +31,6 @@ const Icon = {
   bell: (
     <svg viewBox="0 0 24 24" className="icon-svg" aria-hidden="true"><path d="M12 22a2.6 2.6 0 0 0 2.45-1.7h-4.9A2.6 2.6 0 0 0 12 22Zm7-5V11a7 7 0 0 0-5-6.71V3a2 2 0 1 0-4 0v1.29A7 7 0 0 0 5 11v6l-2 2v1h18v-1l-2-2Z" fill="currentColor" /></svg>
   ),
-  plus: (
-    <svg viewBox="0 0 24 24" className="icon-svg" aria-hidden="true"><path d="M19 11h-6V5h-2v6H5v2h6v6h2v-6h6v-2Z" fill="currentColor" /></svg>
-  ),
 };
 
 const navItems = [
