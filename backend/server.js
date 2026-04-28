@@ -10,11 +10,14 @@ connectDB();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+const normalizeOrigin = (value) => String(value || "").trim().replace(/\/+$/, "");
+const isAllowedVercelOrigin = (origin) => /^https:\/\/[a-z0-9-]+\.vercel\.app$/i.test(origin);
+
 const parseAllowedOrigins = () => {
   const raw = process.env.FRONTEND_URL || "http://localhost:5173";
   return raw
     .split(",")
-    .map((value) => value.trim())
+    .map(normalizeOrigin)
     .filter(Boolean);
 };
 
@@ -22,13 +25,20 @@ app.use(
   cors({
     origin: (origin, callback) => {
       const allowedOrigins = parseAllowedOrigins();
+      const normalizedOrigin = normalizeOrigin(origin);
 
       // Allow tools like Postman (no origin) and local Vite dev ports.
-      if (!origin || allowedOrigins.includes(origin) || /^http:\/\/localhost:5\d{3}$/.test(origin)) {
+      if (
+        !origin ||
+        allowedOrigins.includes(normalizedOrigin) ||
+        isAllowedVercelOrigin(normalizedOrigin) ||
+        /^http:\/\/localhost:5\d{3}$/.test(normalizedOrigin)
+      ) {
         callback(null, true);
         return;
       }
 
+      console.error("CORS blocked for origin:", normalizedOrigin, "Allowed origins:", allowedOrigins);
       callback(new Error("CORS blocked for this origin"));
     },
     credentials: true,
