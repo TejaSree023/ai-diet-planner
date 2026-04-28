@@ -37,8 +37,9 @@ const listRecipes = async (req, res) => {
     const normalizedDietType = normalizeDietType(dietType);
     const normalizedCategory = normalizeCategory(category);
 
-    if (normalizedDietType) filter.dietType = normalizedDietType;
-    if (normalizedCategory) filter.category = normalizedCategory;
+    // Only add to filter if non-empty
+    if (dietType && normalizedDietType) filter.dietType = normalizedDietType;
+    if (category && normalizedCategory) filter.category = normalizedCategory;
     if (search) filter.name = { $regex: String(search).trim(), $options: "i" };
 
     if (minProtein !== undefined) {
